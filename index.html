@@ -53,23 +53,35 @@
     return `${day}.${month}.${year} ${hours}:${minutes}`;
 }
   
-const coments = [
-  {
-    name:"Глеб Фокин",
-    date:"12.02.22 12:18",
-    text:"Это будет первый комментарий на этой странице",
-    likeCounter: 3,
-    isLiked: false,
-  },
-  {
-    name:"Варвара Н",
-    date:"13.02.22 19:22",
-    text:"Мне нравится как оформлена эта страница!❤",
-    likeCounter: 75,
-    isLiked: true,
-    
-  }
-]
+//Api запрос на серввер на получение коментариев
+function getComents (){
+  const fetchPromise = fetch("https://wedev-api.sky.pro/api/v1/maslenskiy-yuriyy/comments",
+{
+  method:"GET"
+})
+.then((response)=>{
+  response.json().then((responseData)=>{
+    const appComments = responseData.comments.map((comment)=>{
+      return{
+        name:comment.author.name,
+        date: new Date(comment.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: false }).replace(',', ''),
+        text:comment.text,
+        likeCounter:comment.likes,
+        isLiked: false
+      };
+    });
+    console.log(appComments)
+    coments = appComments;
+    renderComents ()
+  })
+})
+}
+getComents ()
+
+
+
+
+let coments = []
 
 function renderComents (){
  const listHtml = coments.map((coment, index)=>{
@@ -148,16 +160,27 @@ function initLikeListener(){
       textInputElement.classList.add("error");
       return
     } 
-    coments.push({
+
+    const fetchPromise = fetch("https://wedev-api.sky.pro/api/v1/maslenskiy-yuriyy/comments",
+{
+  method:"POST",
+  body: JSON.stringify({
     name:nameInputElement.value.replaceAll("<", "&lt").replaceAll(">", "&gt"),
     date:getCurrentDateTime(),
     text:textInputElement.value.replaceAll("<", "&lt").replaceAll(">", "&gt"),
     likeCounter: 0
   })
+});
+fetchPromise.then((response)=>{
+  const jsonPromise = response.json();
+  jsonPromise.then((responseData)=>{
+    getComents ()
+  })
+})
+  
     renderComents ()
         nameInputElement.value = "";
         textInputElement.value = "";
   })
-
   </script>
 </html>
