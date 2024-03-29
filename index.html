@@ -95,8 +95,23 @@ function renderComents (){
   comentListElement.innerHTML = listHtml;
   initLikeListener()
   initDeleteListeners()
+  initCommentClickListeners();
 }
 renderComents()
+
+// функционал коментирования
+function initCommentClickListeners() {
+    const commentElements = document.querySelectorAll('.comment');
+    commentElements.forEach(comment => {
+        comment.addEventListener('click', (event) => {
+            event.stopPropagation(); // Предотвращаем всплытие события
+            const text = comment.querySelector('.comment-text').textContent.trim();
+            nameInputElement.value = ""; // Поле для имени очищается
+            textInputElement.value = text;
+        });
+    });
+}
+
 
 //Активность кнопки удаления
 function initDeleteListeners(){
@@ -114,7 +129,8 @@ function initDeleteListeners(){
 function initLikeListener(){
   const likeButtonElement = document.querySelectorAll(".like-button");
   for(const like of likeButtonElement){
-    like.addEventListener("click", ()=>{
+    like.addEventListener("click", (event)=>{
+      event.stopPropagation();
       const index = like.dataset.index;
       coments[index].likeCounter += coments[index].isLiked ? -1 : +1;
       coments[index].isLiked = !coments[index].isLiked;
@@ -133,9 +149,9 @@ function initLikeListener(){
       return
     } 
     coments.push({
-    name:nameInputElement.value,
+    name:nameInputElement.value.replaceAll("<", "&lt").replaceAll(">", "&gt"),
     date:getCurrentDateTime(),
-    text:textInputElement.value,
+    text:textInputElement.value.replaceAll("<", "&lt").replaceAll(">", "&gt"),
     likeCounter: 0
   })
     renderComents ()
