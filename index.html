@@ -62,7 +62,7 @@ function getComents (){
   method:"GET"
 })
 .then((response)=>{
-  return response.json();
+  return response.json(); 
 })
 .then((responseData)=>{
   const appComments = responseData.comments.map((comment)=>{
@@ -71,7 +71,7 @@ function getComents (){
         date: new Date(comment.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: false }).replace(',', ''),
         text:comment.text,
         likeCounter:comment.likes,
-        isLiked: false
+        isLiked: false,
       };
     });
     coments = appComments;
@@ -174,11 +174,21 @@ function initLikeListener(){
     name:nameInputElement.value.replaceAll("<", "&lt").replaceAll(">", "&gt"),
     date:getCurrentDateTime(),
     text:textInputElement.value.replaceAll("<", "&lt").replaceAll(">", "&gt"),
-    likeCounter: 0
+    likeCounter: 0,
+    forceError: false,
   })
 })
 .then((response)=>{
-  return response.json();
+  if(response.status === 201){
+    return response.json();
+  }
+  if(response.status === 400){
+    throw new Error("Имя и текст коментария должны быть больше 3 символов")
+    console.log(response)
+  }
+  if(response.status === 500){
+    throw new Error("Сервер сломался")
+  }
 })
 .then((responseData)=>{
   return getComents ()
@@ -186,11 +196,22 @@ function initLikeListener(){
 .then((data)=>{
   addButtonElement.disabled = false;
   addButtonElement.textContent = "Отправить";
+  nameInputElement.value = "";
+  textInputElement.value = "";
+})
+.catch((error)=>{
+  addButtonElement.disabled = false;
+  addButtonElement.textContent = "Отправить";
+  if(error.message === "Имя и текст коментария должны быть больше 3 символов"){
+    alert("Имя и текст коментария должны быть не менее 3 символов")
+  }
+  if(error.message === "Сервер сломался"){
+    alert("Извините сервер упал, попробуйте позже")
+  }
+
 })
   
     renderComents ()
-        nameInputElement.value = "";
-        textInputElement.value = "";
   })
   </script>
 </html>
