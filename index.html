@@ -8,6 +8,7 @@
 
   <body>
     <div class="container">
+      <p id="loader">Коментарий загружается...</p>
       <ul class="comments" id="coment-list">
         // Этот список рендерится из js
       </ul>
@@ -42,6 +43,7 @@
   const comentListElement = document.getElementById("coment-list");
   const nameInputElement = document.getElementById("nameInput");
   const textInputElement = document.getElementById("textInput");
+  const loaderElement = document.getElementById("loader");
   function getCurrentDateTime() {
     const now = new Date();
     const year = now.getFullYear().toString().slice(-2).padStart(2, '0'); // Получаем последние две цифры года
@@ -55,13 +57,15 @@
   
 //Api запрос на серввер на получение коментариев
 function getComents (){
-  const fetchPromise = fetch("https://wedev-api.sky.pro/api/v1/maslenskiy-yuriyy/comments",
+   return fetch("https://wedev-api.sky.pro/api/v1/maslenskiy-yuriyyy/comments",
 {
   method:"GET"
 })
 .then((response)=>{
-  response.json().then((responseData)=>{
-    const appComments = responseData.comments.map((comment)=>{
+  return response.json();
+})
+.then((responseData)=>{
+  const appComments = responseData.comments.map((comment)=>{
       return{
         name:comment.author.name,
         date: new Date(comment.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: false }).replace(',', ''),
@@ -70,12 +74,12 @@ function getComents (){
         isLiked: false
       };
     });
-    console.log(appComments)
     coments = appComments;
     renderComents ()
-  })
+    loaderElement.style.display = 'none'
 })
 }
+loaderElement.style.display = 'Block'
 getComents ()
 
 
@@ -160,8 +164,10 @@ function initLikeListener(){
       textInputElement.classList.add("error");
       return
     } 
-
-    const fetchPromise = fetch("https://wedev-api.sky.pro/api/v1/maslenskiy-yuriyy/comments",
+    addButtonElement.disabled = true;
+    addButtonElement.textContent = "Отправляю коментарий...";
+    loaderElement.style.display = 'none'
+  fetch("https://wedev-api.sky.pro/api/v1/maslenskiy-yuriyyy/comments",
 {
   method:"POST",
   body: JSON.stringify({
@@ -170,12 +176,16 @@ function initLikeListener(){
     text:textInputElement.value.replaceAll("<", "&lt").replaceAll(">", "&gt"),
     likeCounter: 0
   })
-});
-fetchPromise.then((response)=>{
-  const jsonPromise = response.json();
-  jsonPromise.then((responseData)=>{
-    getComents ()
-  })
+})
+.then((response)=>{
+  return response.json();
+})
+.then((responseData)=>{
+  return getComents ()
+})
+.then((data)=>{
+  addButtonElement.disabled = false;
+  addButtonElement.textContent = "Отправить";
 })
   
     renderComents ()
